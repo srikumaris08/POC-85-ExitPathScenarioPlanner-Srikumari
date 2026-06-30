@@ -1,0 +1,18 @@
+# Exit Path Scenario Planner — Backend Dependencies
+# Real Rails Intelligence Library · Rail: Capital Formation
+
+# Core API framework
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# Data validation & serialisation
+pydantic==2.10.4
+
+# Data processing (ETL / export)
+pandas==2.2.3
+
+# HTTP client (for future live SEC EDGAR / Crunchbase calls)
+httpx==0.28.1
+
+# Environment variable management
+python-dotenv==1.0.1

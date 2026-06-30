@@ -1,0 +1,257 @@
+/* ── Google Fonts — must be first @import ─────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* Custom dark mode variant */
+@media (prefers-color-scheme: dark) { :root { color-scheme: dark; } }
+
+/* ── Real Rails DNA Design Tokens ────────────────────────────── */
+:root {
+  /* Brand Colors */
+  --rr-bg:          #030712;   /* Obsidian Black */
+  --rr-surface:     #0B1117;   /* Deep Navy Grey */
+  --rr-surface-2:   #111827;   /* Slightly elevated surface */
+  --rr-primary:     #38BDF8;   /* Electric Cyan */
+  --rr-secondary:   #818CF8;   /* Indigo */
+  --rr-border:      #1F2937;   /* Slate-800 */
+  --rr-text:        #F8FAFC;   /* Near white */
+  --rr-text-muted:  #94A3B8;   /* Slate-400 */
+  --rr-text-dim:    #475569;   /* Slate-600 */
+  --rr-success:     #10B981;   /* Emerald */
+  --rr-warning:     #F59E0B;   /* Amber */
+  --rr-danger:      #EF4444;   /* Red */
+
+  /* Chart Colors */
+  --chart-ipo:         #38BDF8;
+  --chart-ma:          #818CF8;
+  --chart-secondary:   #10B981;
+  --chart-continuation:#F59E0B;
+
+  /* Radii */
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  /* Shadows */
+  --shadow-glow-cyan:   0 0 20px rgba(56, 189, 248, 0.15);
+  --shadow-glow-indigo: 0 0 20px rgba(129, 140, 248, 0.15);
+  --shadow-card:        0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Font Variables */
+:root {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ── Base Reset ───────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background-color: var(--rr-bg);
+  color: var(--rr-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar Styling ───────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--rr-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rr-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--rr-text-dim);
+}
+
+/* ── Utility Classes ──────────────────────────────────────────── */
+.rr-card {
+  background: var(--rr-surface);
+  border: 1px solid var(--rr-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.rr-card-elevated {
+  background: var(--rr-surface-2);
+  border: 1px solid var(--rr-border);
+  border-radius: var(--radius-lg);
+}
+
+.rr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rr-badge-cyan {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--rr-primary);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.rr-badge-indigo {
+  background: rgba(129, 140, 248, 0.12);
+  color: var(--rr-secondary);
+  border: 1px solid rgba(129, 140, 248, 0.25);
+}
+
+.rr-badge-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--rr-success);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.rr-badge-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--rr-warning);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* ── Glow Animations ─────────────────────────────────────────── */
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-slide-up { animation: slideUp 0.4s ease forwards; }
+.animate-fade-in  { animation: fadeIn 0.3s ease forwards; }
+
+.glow-cyan   { box-shadow: var(--shadow-glow-cyan); }
+.glow-indigo { box-shadow: var(--shadow-glow-indigo); }
+
+/* ── Recharts Overrides ─────────────────────────────────────── */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: var(--rr-surface) !important;
+  border: 1px solid var(--rr-border) !important;
+  border-radius: 8px !important;
+  color: var(--rr-text) !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: var(--rr-border) !important;
+  stroke-opacity: 0.5 !important;
+}
+
+.recharts-text { fill: var(--rr-text-muted) !important; }
+
+/* ── Tab Button ──────────────────────────────────────────────── */
+.tab-btn {
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  color: var(--rr-text-muted);
+  background: transparent;
+}
+
+.tab-btn:hover {
+  color: var(--rr-text);
+  background: var(--rr-surface-2);
+}
+
+.tab-btn.active {
+  color: var(--rr-primary);
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
+}
+
+/* ── Range Slider ────────────────────────────────────────────── */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--rr-border);
+  outline: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--rr-primary);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+  transition: box-shadow 0.2s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.8);
+}
+
+/* ── Select & Input Overrides ────────────────────────────────── */
+select, input[type="text"] {
+  background: var(--rr-surface-2);
+  border: 1px solid var(--rr-border);
+  color: var(--rr-text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+select:focus, input[type="text"]:focus {
+  border-color: var(--rr-primary);
+}
+
+/* ── Sensitivity Grid ────────────────────────────────────────── */
+.sensitivity-grid {
+  display: grid;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.sensitivity-cell {
+  padding: 6px 8px;
+  text-align: center;
+  border: 1px solid var(--rr-border);
+  transition: background 0.2s ease;
+}
+
+.sensitivity-cell:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
