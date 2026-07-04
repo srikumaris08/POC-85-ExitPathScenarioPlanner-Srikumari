@@ -22,6 +22,8 @@ import type { ExitScenarioBundle } from "@/lib/types";
 
 interface Props {
   bundle: ExitScenarioBundle;
+  selectedTimeline: string;
+  selectedAssetClass: string;
 }
 
 const EXIT_COLORS = {
@@ -93,48 +95,57 @@ function GanttBar({ label, start, end, color, status }: GanttBarProps) {
   );
 }
 
-export default function TimelineValuationModule({ bundle }: Props) {
-  const [multiplierAdj, setMultiplierAdj] = useState(1.0); // 0.5 – 1.5x slider
-  const [discountAdj, setDiscountAdj]     = useState(0);   // -10 to +10 pp
+export default function TimelineValuationModule({ bundle, selectedTimeline, selectedAssetClass }: Props) {
+  const [multiplierAdj, setMultiplierAdj] = useState(1.0);
+  const [discountAdj, setDiscountAdj]     = useState(0);
 
-  // Build time-series valuation chart data from all scenarios
+  function withinTimeline(dateStr: string | undefined | null): boolean {
+    if (selectedTimeline === "All" || !dateStr) return true;
+    const months = (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30.44);
+    if (selectedTimeline === "< 12 months")   return months <= 12;
+    if (selectedTimeline === "12–24 months")  return months > 12 && months <= 24;
+    if (selectedTimeline === "24–36 months")  return months > 24 && months <= 36;
+    if (selectedTimeline === "> 36 months")   return months > 36;
+    return true;
+  }
+  function acm(type: string): boolean {
+    return selectedAssetClass === "All" || selectedAssetClass === type;
+  }
+
+  const showIPO          = !!bundle.ipo          && acm("IPO")                   && withinTimeline(bundle.ipo.projected_ipo_date);
+  const showMA           = !!bundle.ma           && acm("M&A")                   && withinTimeline(bundle.ma.projected_close_date);
+  const showSecondary    = !!bundle.secondary    && acm("Secondary")             && withinTimeline(bundle.secondary.projected_close_date);
+  const showContinuation = !!bundle.continuation && acm("Continuation Vehicle") && withinTimeline(bundle.continuation.projected_exit_date);
+
   const chartData = useMemo(() => {
     const points: Record<string, { year: string; ipo?: number; ma?: number; secondary?: number; continuation?: number }> = {};
 
     const addPoint = (yearFrac: number, key: keyof typeof EXIT_COLORS, val: number) => {
-      const yr = String(Math.round(yearFrac * 2) / 2); // 0.5-year bins
+      const yr = String(Math.round(yearFrac * 2) / 2);
       if (!points[yr]) points[yr] = { year: yr };
       (points[yr] as Record<string, string | number>)[key] = Math.round(val * multiplierAdj * (1 - discountAdj / 100));
     };
 
-    if (bundle.ipo) {
-      addPoint(dateToNum(bundle.ipo.projected_ipo_date), "ipo", bundle.ipo.valuation.base_case_usd_m);
-    }
-    if (bundle.ma) {
-      addPoint(dateToNum(bundle.ma.projected_close_date), "ma", bundle.ma.valuation.base_case_usd_m);
-    }
-    if (bundle.secondary) {
-      addPoint(dateToNum(bundle.secondary.projected_close_date), "secondary", bundle.secondary.valuation.base_case_usd_m);
-    }
-    if (bundle.continuation) {
-      addPoint(dateToNum(bundle.continuation.projected_exit_date), "continuation", bundle.continuation.valuation.base_case_usd_m);
-    }
+    if (showIPO)          addPoint(dateToNum(bundle.ipo!.projected_ipo_date),        "ipo",          bundle.ipo!.valuation.base_case_usd_m);
+    if (showMA)           addPoint(dateToNum(bundle.ma!.projected_close_date),        "ma",           bundle.ma!.valuation.base_case_usd_m);
+    if (showSecondary)    addPoint(dateToNum(bundle.secondary!.projected_close_date), "secondary",    bundle.secondary!.valuation.base_case_usd_m);
+    if (showContinuation) addPoint(dateToNum(bundle.continuation!.projected_exit_date),"continuation",bundle.continuation!.valuation.base_case_usd_m);
 
     return Object.values(points).sort((a, b) => parseFloat(a.year) - parseFloat(b.year));
-  }, [bundle, multiplierAdj, discountAdj]);
+  }, [bundle, multiplierAdj, discountAdj, showIPO, showMA, showSecondary, showContinuation]);
 
-  // Collect timeline milestones from the active exit scenarios
+  // Gantt milestones — only from matching arms
   const allMilestones = [
-    ...(bundle.ipo?.timeline ?? []).map((t) => ({ ...t, exitColor: EXIT_COLORS.ipo })),
-    ...(bundle.ma?.timeline  ?? []).map((t) => ({ ...t, exitColor: EXIT_COLORS.ma })),
+    ...(showIPO       ? (bundle.ipo?.timeline ?? []).map((t) => ({ ...t, exitColor: EXIT_COLORS.ipo }))   : []),
+    ...(showMA        ? (bundle.ma?.timeline  ?? []).map((t) => ({ ...t, exitColor: EXIT_COLORS.ma }))    : []),
   ].slice(0, 8);
 
-  // Valuation range display
+  // Valuation range display — filtered
   const scenarios = [
-    bundle.ipo        && { name: "IPO",          color: EXIT_COLORS.ipo,          v: bundle.ipo.valuation },
-    bundle.ma         && { name: "M&A",           color: EXIT_COLORS.ma,           v: bundle.ma.valuation },
-    bundle.secondary  && { name: "Secondary",     color: EXIT_COLORS.secondary,    v: bundle.secondary.valuation },
-    bundle.continuation && { name: "Continuation", color: EXIT_COLORS.continuation, v: bundle.continuation.valuation },
+    showIPO          && { name: "IPO",          color: EXIT_COLORS.ipo,          v: bundle.ipo!.valuation },
+    showMA           && { name: "M&A",           color: EXIT_COLORS.ma,           v: bundle.ma!.valuation },
+    showSecondary    && { name: "Secondary",     color: EXIT_COLORS.secondary,    v: bundle.secondary!.valuation },
+    showContinuation && { name: "Continuation", color: EXIT_COLORS.continuation, v: bundle.continuation!.valuation },
   ].filter(Boolean) as { name: string; color: string; v: { bear_case_usd_m: number; base_case_usd_m: number; bull_case_usd_m: number } }[];
 
   const maxVal = Math.max(...scenarios.map((s) => s.v.bull_case_usd_m));
@@ -286,10 +297,10 @@ export default function TimelineValuationModule({ bundle }: Props) {
               }}
             />
             <ReferenceLine y={0} stroke="var(--rr-border)" />
-            {bundle.ipo       && <Line type="monotone" dataKey="ipo"          stroke="#38BDF8" strokeWidth={2} dot={{ fill: "#38BDF8", r: 4 }} name="IPO" connectNulls />}
-            {bundle.ma        && <Line type="monotone" dataKey="ma"           stroke="#818CF8" strokeWidth={2} dot={{ fill: "#818CF8", r: 4 }} name="M&A" connectNulls />}
-            {bundle.secondary && <Line type="monotone" dataKey="secondary"    stroke="#10B981" strokeWidth={2} dot={{ fill: "#10B981", r: 4 }} name="Secondary" connectNulls />}
-            {bundle.continuation && <Line type="monotone" dataKey="continuation" stroke="#F59E0B" strokeWidth={2} dot={{ fill: "#F59E0B", r: 4 }} name="Continuation" connectNulls />}
+            {showIPO          && <Line type="monotone" dataKey="ipo"          stroke="#38BDF8" strokeWidth={2} dot={{ fill: "#38BDF8", r: 4 }} name="IPO" connectNulls />}
+            {showMA           && <Line type="monotone" dataKey="ma"           stroke="#818CF8" strokeWidth={2} dot={{ fill: "#818CF8", r: 4 }} name="M&A" connectNulls />}
+            {showSecondary    && <Line type="monotone" dataKey="secondary"    stroke="#10B981" strokeWidth={2} dot={{ fill: "#10B981", r: 4 }} name="Secondary" connectNulls />}
+            {showContinuation && <Line type="monotone" dataKey="continuation" stroke="#F59E0B" strokeWidth={2} dot={{ fill: "#F59E0B", r: 4 }} name="Continuation" connectNulls />}
           </ComposedChart>
         </ResponsiveContainer>
 

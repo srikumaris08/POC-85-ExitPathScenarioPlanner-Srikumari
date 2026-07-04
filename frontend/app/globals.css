@@ -81,6 +81,13 @@ body {
   background: var(--rr-text-dim);
 }
 
+/* ── Sidebar hidden-scrollbar ─────────────────────────────────── */
+/* The sidebar's inner section container scrolls silently so        */
+/* expanded InfoBlock sections remain reachable without a visible   */
+/* scrollbar disrupting the clean layout.                           */
+.rr-sidebar-scroll::-webkit-scrollbar { display: none; }
+.rr-sidebar-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+
 /* ── Utility Classes ──────────────────────────────────────────── */
 .rr-card {
   background: var(--rr-surface);

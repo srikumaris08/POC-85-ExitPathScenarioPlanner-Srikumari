@@ -64,7 +64,7 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSector]);
 
-  // Filter bundles client-side by asset class
+  // ── Filter bundles list by asset class (for company selector dropdown) ──────
   const filteredBundles = bundles.filter((b) => {
     if (selectedAssetClass === "All") return true;
     if (selectedAssetClass === "IPO")                  return !!b.ipo;
@@ -78,6 +78,7 @@ export default function HomePage() {
     ? selectedId
     : filteredBundles[0]?.company_id ?? "";
 
+  // Full unmasked bundle — sidebar always receives complete company data
   const activeBundle = filteredBundles.find((b) => b.company_id === activeBundleId) ?? null;
 
   // ── Loading screen
@@ -215,16 +216,11 @@ export default function HomePage() {
         background: "var(--rr-bg)",
       }}
     >
-      {/* 70% Main Stage */}
+      {/* 70% Main Stage — includes FilterBar */}
       <Dashboard
         bundles={filteredBundles}
         selectedId={activeBundleId}
         onSelectId={setSelectedId}
-      />
-
-      {/* 30% Intelligence Sidebar */}
-      <Sidebar
-        bundle={activeBundle}
         sectors={sectors}
         selectedSector={selectedSector}
         onSectorChange={setSelectedSector}
@@ -233,6 +229,9 @@ export default function HomePage() {
         selectedAssetClass={selectedAssetClass}
         onAssetClassChange={setSelectedAssetClass}
       />
+
+      {/* 30% Intelligence Sidebar — KPIs, Why This Matters, Who Controls, Download */}
+      <Sidebar bundle={activeBundle} />
     </div>
   );
 }

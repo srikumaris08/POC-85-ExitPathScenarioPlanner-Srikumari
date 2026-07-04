@@ -3,7 +3,7 @@
 /**
  * Dashboard.tsx — 70% Main Stage
  * Real Rails Intelligence Library · Exit Path Scenario Planner
- * Hosts: ExitCompareModule, TimelineValuationModule,
+ * Hosts: FilterBar, ExitCompareModule, TimelineValuationModule,
  *        StakeholderOutcomesView, SensitivityTable
  */
 
@@ -13,11 +13,20 @@ import ExitCompareModule       from "./ExitCompareModule";
 import TimelineValuationModule from "./TimelineValuationModule";
 import StakeholderOutcomesView from "./StakeholderOutcomesView";
 import SensitivityTable        from "./SensitivityTable";
+import FilterBar               from "./FilterBar";
 
 interface Props {
   bundles: ExitScenarioBundle[];
   selectedId: string;
   onSelectId: (id: string) => void;
+  // Filter state — lifted from page.tsx
+  sectors: string[];
+  selectedSector: string;
+  onSectorChange: (s: string) => void;
+  selectedTimeline: string;
+  onTimelineChange: (t: string) => void;
+  selectedAssetClass: string;
+  onAssetClassChange: (a: string) => void;
 }
 
 type ActivePanel = "compare" | "timeline" | "stakeholders" | "sensitivity";
@@ -29,7 +38,18 @@ const PANELS: { id: ActivePanel; label: string; icon: string }[] = [
   { id: "sensitivity",  label: "Sensitivity Table",    icon: "🔢" },
 ];
 
-export default function Dashboard({ bundles, selectedId, onSelectId }: Props) {
+export default function Dashboard({
+  bundles,
+  selectedId,
+  onSelectId,
+  sectors,
+  selectedSector,
+  onSectorChange,
+  selectedTimeline,
+  onTimelineChange,
+  selectedAssetClass,
+  onAssetClassChange,
+}: Props) {
   const [activePanel, setActivePanel] = useState<ActivePanel>("compare");
 
   const bundle = bundles.find((b) => b.company_id === selectedId) ?? bundles[0];
@@ -153,6 +173,17 @@ export default function Dashboard({ bundles, selectedId, onSelectId }: Props) {
         </div>
       </div>
 
+      {/* ── Intelligence Filter Bar ──────────────────────────────── */}
+      <FilterBar
+        sectors={sectors}
+        selectedSector={selectedSector}
+        onSectorChange={onSectorChange}
+        selectedTimeline={selectedTimeline}
+        onTimelineChange={onTimelineChange}
+        selectedAssetClass={selectedAssetClass}
+        onAssetClassChange={onAssetClassChange}
+      />
+
       {/* ── Module Navigation Tabs ──────────────────────────────── */}
       <div
         style={{
@@ -247,10 +278,10 @@ export default function Dashboard({ bundles, selectedId, onSelectId }: Props) {
 
           {/* Scrollable chart content with resolved flex height */}
           <div style={{ flex: 1, minHeight: 0, overflow: "auto", position: "relative", zIndex: 1 }}>
-            {activePanel === "compare"      && <ExitCompareModule       bundle={bundle} />}
-            {activePanel === "timeline"     && <TimelineValuationModule bundle={bundle} />}
-            {activePanel === "stakeholders" && <StakeholderOutcomesView bundle={bundle} />}
-            {activePanel === "sensitivity"  && <SensitivityTable        bundle={bundle} />}
+            {activePanel === "compare"      && <ExitCompareModule       bundle={bundle} selectedTimeline={selectedTimeline} selectedAssetClass={selectedAssetClass} />}
+            {activePanel === "timeline"     && <TimelineValuationModule bundle={bundle} selectedTimeline={selectedTimeline} selectedAssetClass={selectedAssetClass} />}
+            {activePanel === "stakeholders" && <StakeholderOutcomesView bundle={bundle} selectedTimeline={selectedTimeline} selectedAssetClass={selectedAssetClass} />}
+            {activePanel === "sensitivity"  && <SensitivityTable        bundle={bundle} selectedTimeline={selectedTimeline} selectedAssetClass={selectedAssetClass} />}
           </div>
         </div>
       </div>

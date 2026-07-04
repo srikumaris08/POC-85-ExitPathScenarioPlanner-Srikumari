@@ -26,6 +26,8 @@ import type { ExitScenarioBundle } from "@/lib/types";
 
 interface Props {
   bundle: ExitScenarioBundle;
+  selectedTimeline: string;
+  selectedAssetClass: string;
 }
 
 const EXIT_COLORS = {
@@ -60,15 +62,31 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   );
 };
 
-export default function ExitCompareModule({ bundle }: Props) {
+export default function ExitCompareModule({ bundle, selectedTimeline, selectedAssetClass }: Props) {
   const [view, setView] = useState<ViewMode>("valuation");
 
-  // Build unified comparison data
+  // Helper: is a projected date within the chosen timeline window?
+  function withinTimeline(dateStr: string | undefined | null): boolean {
+    if (selectedTimeline === "All" || !dateStr) return true;
+    const months = (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30.44);
+    if (selectedTimeline === "< 12 months")   return months <= 12;
+    if (selectedTimeline === "12–24 months")  return months > 12 && months <= 24;
+    if (selectedTimeline === "24–36 months")  return months > 24 && months <= 36;
+    if (selectedTimeline === "> 36 months")   return months > 36;
+    return true;
+  }
+
+  // Apply both filters to the exits list
+  function assetClassMatch(type: string): boolean {
+    return selectedAssetClass === "All" || selectedAssetClass === type;
+  }
+
+  // Build unified comparison data — only include arms matching active filters
   const exits = [
-    bundle.ipo       && { name: "IPO",                  type: "IPO" as const,                  val: bundle.ipo },
-    bundle.ma        && { name: "M&A",                  type: "M&A" as const,                  val: bundle.ma },
-    bundle.secondary && { name: "Secondary",            type: "Secondary" as const,            val: bundle.secondary },
-    bundle.continuation && { name: "Continuation",      type: "Continuation Vehicle" as const, val: bundle.continuation },
+    bundle.ipo       && assetClassMatch("IPO")                  && withinTimeline(bundle.ipo.projected_ipo_date)          && { name: "IPO",          type: "IPO" as const,                  val: bundle.ipo },
+    bundle.ma        && assetClassMatch("M&A")                  && withinTimeline(bundle.ma.projected_close_date)          && { name: "M&A",          type: "M&A" as const,                  val: bundle.ma },
+    bundle.secondary && assetClassMatch("Secondary")            && withinTimeline(bundle.secondary.projected_close_date)   && { name: "Secondary",    type: "Secondary" as const,            val: bundle.secondary },
+    bundle.continuation && assetClassMatch("Continuation Vehicle") && withinTimeline(bundle.continuation.projected_exit_date) && { name: "Continuation", type: "Continuation Vehicle" as const, val: bundle.continuation },
   ].filter(Boolean) as { name: string; type: keyof typeof EXIT_COLORS; val: { valuation: { bear_case_usd_m: number; base_case_usd_m: number; bull_case_usd_m: number }; stakeholder_outcomes: Array<{ stakeholder: string; moic_base: number; proceeds_base_usd_m: number }> } }[];
 
   const valuationData = exits.map((e) => ({
@@ -79,7 +97,7 @@ export default function ExitCompareModule({ bundle }: Props) {
     color: EXIT_COLORS[e.type],
   }));
 
-  // Radar multi-dimensional: normalised scores
+  // Radar: only show arms matching filters
   const radarData = [
     { metric: "Speed", IPO: 55, "M&A": 80, Secondary: 90, Continuation: 60 },
     { metric: "Valuation\nUpside", IPO: 90, "M&A": 70, Secondary: 50, Continuation: 65 },
@@ -88,6 +106,10 @@ export default function ExitCompareModule({ bundle }: Props) {
     { metric: "Regulatory\nRisk", IPO: 40, "M&A": 60, Secondary: 80, Continuation: 85 },
     { metric: "Complexity", IPO: 35, "M&A": 45, Secondary: 75, Continuation: 70 },
   ];
+  const showIPO         = !!bundle.ipo         && assetClassMatch("IPO")                   && withinTimeline(bundle.ipo.projected_ipo_date);
+  const showMA          = !!bundle.ma          && assetClassMatch("M&A")                   && withinTimeline(bundle.ma.projected_close_date);
+  const showSecondary   = !!bundle.secondary   && assetClassMatch("Secondary")             && withinTimeline(bundle.secondary.projected_close_date);
+  const showContinuation= !!bundle.continuation&& assetClassMatch("Continuation Vehicle") && withinTimeline(bundle.continuation.projected_exit_date);
 
   const moicData = exits.flatMap((e) =>
     e.val.stakeholder_outcomes.slice(0, 3).map((s) => ({
@@ -176,18 +198,10 @@ export default function ExitCompareModule({ bundle }: Props) {
             <RadarChart data={radarData} margin={{ top: 8, right: 20, left: 20, bottom: 8 }}>
               <PolarGrid stroke="var(--rr-border)" strokeOpacity={0.5} />
               <PolarAngleAxis dataKey="metric" tick={{ fill: "var(--rr-text-muted)", fontSize: 10 }} />
-              {bundle.ipo && (
-                <Radar name="IPO" dataKey="IPO" stroke="#38BDF8" fill="#38BDF8" fillOpacity={0.12} strokeWidth={2} />
-              )}
-              {bundle.ma && (
-                <Radar name="M&A" dataKey="M&A" stroke="#818CF8" fill="#818CF8" fillOpacity={0.12} strokeWidth={2} />
-              )}
-              {bundle.secondary && (
-                <Radar name="Secondary" dataKey="Secondary" stroke="#10B981" fill="#10B981" fillOpacity={0.12} strokeWidth={2} />
-              )}
-              {bundle.continuation && (
-                <Radar name="Continuation" dataKey="Continuation" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.12} strokeWidth={2} />
-              )}
+              {showIPO         && <Radar name="IPO"          dataKey="IPO"          stroke="#38BDF8" fill="#38BDF8" fillOpacity={0.12} strokeWidth={2} />}
+              {showMA          && <Radar name="M&A"          dataKey="M&A"          stroke="#818CF8" fill="#818CF8" fillOpacity={0.12} strokeWidth={2} />}
+              {showSecondary   && <Radar name="Secondary"    dataKey="Secondary"    stroke="#10B981" fill="#10B981" fillOpacity={0.12} strokeWidth={2} />}
+              {showContinuation&& <Radar name="Continuation" dataKey="Continuation" stroke="#F59E0B" fill="#F59E0B" fillOpacity={0.12} strokeWidth={2} />}
               <Legend
                 wrapperStyle={{ fontSize: "0.72rem", color: "var(--rr-text-muted)" }}
                 iconType="circle"

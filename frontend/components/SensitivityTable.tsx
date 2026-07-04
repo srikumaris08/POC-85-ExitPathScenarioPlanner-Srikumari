@@ -11,6 +11,8 @@ import type { ExitScenarioBundle, SensitivityRow } from "@/lib/types";
 
 interface Props {
   bundle: ExitScenarioBundle;
+  selectedTimeline: string;
+  selectedAssetClass: string;
 }
 
 type Scenario = "IPO" | "M&A" | "Secondary" | "Continuation";
@@ -42,15 +44,35 @@ function buildGrid(rows: SensitivityRow[]): {
   return { multiples, rates, grid };
 }
 
-export default function SensitivityTable({ bundle }: Props) {
+export default function SensitivityTable({ bundle, selectedTimeline, selectedAssetClass }: Props) {
   const [activeScenario, setActiveScenario] = useState<Scenario>("IPO");
   const [metric, setMetric] = useState<"valuation" | "founder" | "investor">("valuation");
+
+  function withinTimeline(dateStr: string | undefined | null): boolean {
+    if (selectedTimeline === "All" || !dateStr) return true;
+    const months = (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30.44);
+    if (selectedTimeline === "< 12 months")   return months <= 12;
+    if (selectedTimeline === "12–24 months")  return months > 12 && months <= 24;
+    if (selectedTimeline === "24–36 months")  return months > 24 && months <= 36;
+    if (selectedTimeline === "> 36 months")   return months > 36;
+    return true;
+  }
+  function acm(type: string): boolean {
+    return selectedAssetClass === "All" || selectedAssetClass === type;
+  }
 
   const scenarioRows: Record<Scenario, SensitivityRow[] | undefined> = {
     "IPO":          bundle.ipo?.sensitivity_table,
     "M&A":          bundle.ma?.sensitivity_table,
     "Secondary":    bundle.secondary?.sensitivity_table,
     "Continuation": bundle.continuation?.sensitivity_table,
+  };
+
+  const scenarioVisible: Record<Scenario, boolean> = {
+    "IPO":          acm("IPO")                   && withinTimeline(bundle.ipo?.projected_ipo_date),
+    "M&A":          acm("M&A")                   && withinTimeline(bundle.ma?.projected_close_date),
+    "Secondary":    acm("Secondary")             && withinTimeline(bundle.secondary?.projected_close_date),
+    "Continuation": acm("Continuation Vehicle") && withinTimeline(bundle.continuation?.projected_exit_date),
   };
 
   const rows = scenarioRows[activeScenario] ?? [];
@@ -66,7 +88,7 @@ export default function SensitivityTable({ bundle }: Props) {
   const maxVal = Math.max(...allValues);
 
   const availableScenarios = (Object.keys(scenarioRows) as Scenario[]).filter(
-    (k) => scenarioRows[k] && scenarioRows[k]!.length > 0
+    (k) => scenarioRows[k] && scenarioRows[k]!.length > 0 && scenarioVisible[k]
   );
 
   return (
