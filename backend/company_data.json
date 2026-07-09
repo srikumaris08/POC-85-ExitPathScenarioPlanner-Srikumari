@@ -1,0 +1,431 @@
+{
+  "_meta": {
+    "version": "1.1.0",
+    "description": "Synthetic financial profiles — Exit Path Scenario Planner. All figures are illustrative mock data.",
+    "multiples_source": "Public-comps benchmarks, 2023-2024 median ARR multiples (tech sector)",
+    "valuation_formula": "bear = arr * sector_multiple.low, base = arr * sector_multiple.mid, bull = arr * sector_multiple.high",
+    "ebitda_formula": "ebitda_usd_m = arr_usd_m * ebitda_margin_pct / 100"
+  },
+  "sector_multiples": {
+    "Enterprise Software": { "low": 6.0,  "mid": 10.0, "high": 16.0 },
+    "FinTech":             { "low": 5.0,  "mid": 9.0,  "high": 14.0 },
+    "Healthcare IT":       { "low": 4.0,  "mid": 7.5,  "high": 12.0 },
+    "Consumer Tech":       { "low": 3.0,  "mid": 6.0,  "high": 10.0 },
+    "Deep Tech":           { "low": 8.0,  "mid": 14.0, "high": 22.0 },
+    "Climate Tech":        { "low": 5.0,  "mid": 9.0,  "high": 15.0 },
+    "Cybersecurity":       { "low": 7.0,  "mid": 12.0, "high": 18.0 },
+    "EdTech":              { "low": 3.0,  "mid": 5.5,  "high": 9.0  }
+  },
+  "companies": [
+    {
+      "id": "C001",
+      "name": "NovaSpark AI",
+      "sector": "Enterprise Software",
+      "stage": "Pre-IPO",
+      "raised": 220.0,
+      "arr": 85.0,
+      "growth": 68.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 12.75,
+      "shares_outstanding_m": 120.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=85*6.0=510.0  base=85*10.0=850.0  bull=85*16.0=1360.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 132.0,
+          "_check": "220*0.60=132 (approx 60% of round in Series C)"
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 66.0,
+          "_check": "220*0.30=66"
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    },
+    {
+      "id": "C002",
+      "name": "PulseFinance",
+      "sector": "FinTech",
+      "stage": "Series C",
+      "raised": 135.0,
+      "arr": 52.0,
+      "growth": 55.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 7.8,
+      "shares_outstanding_m": 95.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=52*5.0=260.0  base=52*9.0=468.0  bull=52*14.0=728.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 81.0
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 40.5
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    },
+    {
+      "id": "C003",
+      "name": "MedRoute Health",
+      "sector": "Healthcare IT",
+      "stage": "Series B",
+      "raised": 78.0,
+      "arr": 28.0,
+      "growth": 42.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 4.2,
+      "shares_outstanding_m": 60.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=28*4.0=112.0  base=28*7.5=210.0  bull=28*12.0=336.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 46.8
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 23.4
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    },
+    {
+      "id": "C004",
+      "name": "QuantumLeap Labs",
+      "sector": "Deep Tech",
+      "stage": "Series C",
+      "raised": 310.0,
+      "arr": 40.0,
+      "growth": 120.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 6.0,
+      "shares_outstanding_m": 110.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=40*8.0=320.0  base=40*14.0=560.0  bull=40*22.0=880.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 186.0
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 93.0
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    },
+    {
+      "id": "C005",
+      "name": "GreenVolt Energy",
+      "sector": "Climate Tech",
+      "stage": "Growth",
+      "raised": 180.0,
+      "arr": 61.0,
+      "growth": 75.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 9.15,
+      "shares_outstanding_m": 88.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=61*5.0=305.0  base=61*9.0=549.0  bull=61*15.0=915.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 108.0
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 54.0
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    },
+    {
+      "id": "C006",
+      "name": "ShieldNet Security",
+      "sector": "Cybersecurity",
+      "stage": "Pre-IPO",
+      "raised": 290.0,
+      "arr": 110.0,
+      "growth": 58.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 16.5,
+      "shares_outstanding_m": 140.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=110*7.0=770.0  base=110*12.0=1320.0  bull=110*18.0=1980.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 174.0
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 87.0
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    },
+    {
+      "id": "C007",
+      "name": "LearnBridge EdTech",
+      "sector": "EdTech",
+      "stage": "Series B",
+      "raised": 55.0,
+      "arr": 18.0,
+      "growth": 38.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 2.7,
+      "shares_outstanding_m": 50.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=18*3.0=54.0  base=18*5.5=99.0  bull=18*9.0=162.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 33.0
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 16.5
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    },
+    {
+      "id": "C008",
+      "name": "Streamline Consumer",
+      "sector": "Consumer Tech",
+      "stage": "Series C",
+      "raised": 95.0,
+      "arr": 34.0,
+      "growth": 46.0,
+      "ebitda_margin_pct": 15.0,
+      "ebitda_usd_m": 5.1,
+      "shares_outstanding_m": 72.0,
+      "ebitda_multiple_low": 12.0,
+      "ebitda_multiple_high": 20.0,
+      "_valuation_check": "bear=34*3.0=102.0  base=34*6.0=204.0  bull=34*10.0=340.0",
+      "share_pool": {
+        "founders_pct": 20.0,
+        "esop_pct": 12.0,
+        "series_c_pct": 18.0,
+        "series_b_pct": 10.0,
+        "series_a_pct": 8.0,
+        "angel_seed_pct": 4.0,
+        "secondary_float_pct": 28.0,
+        "_check": "20+12+18+10+8+4+28=100"
+      },
+      "liq_pref_stack": [
+        {
+          "share_class": "Series C Preferred",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 28.0,
+          "invested_usd_m": 57.0
+        },
+        {
+          "share_class": "Series A/B Preferred",
+          "preference_type": "Participating",
+          "multiple": 1.0,
+          "participation_cap": 3.0,
+          "ownership_pct": 22.0,
+          "invested_usd_m": 28.5
+        },
+        {
+          "share_class": "Common / Founder Shares",
+          "preference_type": "Non-Participating",
+          "multiple": 1.0,
+          "participation_cap": null,
+          "ownership_pct": 50.0,
+          "invested_usd_m": 0.0
+        }
+      ]
+    }
+  ]
+}

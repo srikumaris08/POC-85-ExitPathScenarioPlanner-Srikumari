@@ -21,7 +21,10 @@ import logging
 import os
 import traceback
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+import pandas as pd
 
 from dotenv import load_dotenv
 
@@ -45,6 +48,48 @@ from adapters import (
     flatten_bundle_for_export,
     generate_all_scenarios,
 )
+
+# ── Data File ─────────────────────────────────────────────────────────────────
+# Path is resolved relative to this file so it works from any working directory.
+_DATA_FILE = Path(__file__).parent / "company_data.json"
+
+
+def load_company_data() -> pd.DataFrame:
+    """
+    Read company_data.json and return a normalised DataFrame.
+    Each row represents one company.  The nested ``liq_pref_stack`` and
+    ``share_pool`` columns are kept as Python objects (list / dict) so
+    adapters can consume them directly.
+
+    Raises FileNotFoundError if the data file is missing.
+    """
+    if not _DATA_FILE.exists():
+        raise FileNotFoundError(
+            f"company_data.json not found at {_DATA_FILE}. "
+            "Ensure the file is present in the backend directory."
+        )
+    with _DATA_FILE.open(encoding="utf-8") as fh:
+        raw = json.load(fh)
+
+    # Build flat records manually so nested objects are never exploded.
+    # json_normalize would flatten share_pool / liq_pref_stack into dotted
+    # columns (share_pool.founders_pct, etc.) and lose the top-level key,
+    # causing a KeyError when adapters later do company["share_pool"].
+    records = []
+    for company in raw["companies"]:
+        record: Dict[str, Any] = {}
+        for key, value in company.items():
+            # Skip internal audit/comment fields.
+            if key.startswith("_"):
+                continue
+            record[key] = value
+        records.append(record)
+
+    df = pd.DataFrame(records)
+    logger.info("Loaded %d companies from %s", len(df), _DATA_FILE.name)
+    return df
+
+
 from schemas import (
     DownloadPayload,
     ExitScenarioBundle,
@@ -87,13 +132,33 @@ app.add_middleware(
 # ── Cached Data Layer ─────────────────────────────────────────────────────────
 
 @lru_cache(maxsize=1)
+def _get_company_df() -> pd.DataFrame:
+    """Load and cache the company DataFrame from company_data.json."""
+    try:
+        df = load_company_data()
+        logger.info("Company DataFrame cached: %d rows.", len(df))
+        return df
+    except Exception as exc:
+        logger.error("Failed to load company_data.json: %s\n%s", exc, traceback.format_exc())
+        return pd.DataFrame()
+
+
+@lru_cache(maxsize=1)
 def _get_scenarios() -> List[ExitScenarioBundle]:
     """
-    Load and cache all scenario bundles.
-    Falls back to an empty list and logs the error — the server stays alive.
+    Build and cache all scenario bundles from the company DataFrame.
+    Passes DataFrame records to generate_all_scenarios() so the adapter
+    reads from company_data.json rather than its own hardcoded list.
+    Falls back to an empty list and logs the error — server stays alive.
     """
     try:
-        bundles = generate_all_scenarios(seed=42)
+        df = _get_company_df()
+        if df.empty:
+            logger.warning("Company DataFrame is empty; returning no scenarios.")
+            return []
+        # Convert each DataFrame row to a plain dict for the adapter layer.
+        companies = df.to_dict(orient="records")
+        bundles = generate_all_scenarios(seed=42, companies=companies)
         logger.info("Scenario cache warm: %d bundles loaded.", len(bundles))
         return bundles
     except Exception as exc:
@@ -209,6 +274,27 @@ def get_specific_exit(company_id: str, exit_type: str) -> Any:
 )
 def get_sectors() -> Dict[str, List[str]]:
     return {"sectors": [s.value for s in Sector]}
+
+
+@app.get(
+    "/api/companies",
+    tags=["Meta"],
+    summary="Raw company profiles loaded from company_data.json (auditable data source)",
+)
+def get_companies(
+    sector: Optional[str] = Query(None, description="Filter by sector name"),
+) -> Dict[str, Any]:
+    """Return the raw company DataFrame records so reviewers can verify the
+    source numbers independently without running the scenario builder."""
+    df = _get_company_df()
+    if sector:
+        df = df[df["sector"].str.lower() == sector.lower()]
+    records = df.to_dict(orient="records")
+    return {
+        "count": len(records),
+        "source_file": _DATA_FILE.name,
+        "companies": records,
+    }
 
 
 @app.get(

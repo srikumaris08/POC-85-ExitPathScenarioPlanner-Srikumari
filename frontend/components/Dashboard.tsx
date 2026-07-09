@@ -8,12 +8,31 @@
  */
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import type { ExitScenarioBundle } from "@/lib/types";
 import ExitCompareModule       from "./ExitCompareModule";
 import TimelineValuationModule from "./TimelineValuationModule";
 import StakeholderOutcomesView from "./StakeholderOutcomesView";
 import SensitivityTable        from "./SensitivityTable";
 import FilterBar               from "./FilterBar";
+
+// Leaflet requires a real DOM — never run on the server.
+const GeospatialExitMap = dynamic(
+  () => import("./GeospatialExitMap"),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "center",
+        height: "420px", color: "var(--rr-text-muted)", fontSize: "0.82rem",
+        gap: 10,
+      }}>
+        <span style={{ animation: "pulseGlow 1.5s ease-in-out infinite", fontSize: "1.2rem" }}>🗺️</span>
+        Loading Exit Intelligence Map…
+      </div>
+    ),
+  }
+);
 
 interface Props {
   bundles: ExitScenarioBundle[];
@@ -29,13 +48,14 @@ interface Props {
   onAssetClassChange: (a: string) => void;
 }
 
-type ActivePanel = "compare" | "timeline" | "stakeholders" | "sensitivity";
+type ActivePanel = "compare" | "timeline" | "stakeholders" | "sensitivity" | "map";
 
 const PANELS: { id: ActivePanel; label: string; icon: string }[] = [
-  { id: "compare",      label: "Exit Compare",       icon: "⚡" },
+  { id: "compare",      label: "Exit Compare",        icon: "⚡" },
   { id: "timeline",     label: "Timeline & Valuation", icon: "📈" },
   { id: "stakeholders", label: "Stakeholder Outcomes", icon: "👥" },
   { id: "sensitivity",  label: "Sensitivity Table",    icon: "🔢" },
+  { id: "map",          label: "Exit Map",             icon: "🗺️" },
 ];
 
 export default function Dashboard({
@@ -282,6 +302,7 @@ export default function Dashboard({
             {activePanel === "timeline"     && <TimelineValuationModule bundle={bundle} selectedTimeline={selectedTimeline} selectedAssetClass={selectedAssetClass} />}
             {activePanel === "stakeholders" && <StakeholderOutcomesView bundle={bundle} selectedTimeline={selectedTimeline} selectedAssetClass={selectedAssetClass} />}
             {activePanel === "sensitivity"  && <SensitivityTable        bundle={bundle} selectedTimeline={selectedTimeline} selectedAssetClass={selectedAssetClass} />}
+            {activePanel === "map"          && <GeospatialExitMap height="100%" />}
           </div>
         </div>
       </div>

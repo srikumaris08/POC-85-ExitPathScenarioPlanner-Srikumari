@@ -343,16 +343,29 @@ def build_continuation_scenario(company: Dict[str, Any], base_date: date) -> Con
 
 # ── Master Orchestrator ──────────────────────────────────────────────────────
 
-def generate_all_scenarios(seed: int = 42) -> List[ExitScenarioBundle]:
+def generate_all_scenarios(
+    seed: int = 42,
+    companies: Optional[List[Dict[str, Any]]] = None,
+) -> List[ExitScenarioBundle]:
     """
-    Generate a complete set of ExitScenarioBundles for all mock companies.
-    Uses a fixed random seed for reproducible demo output.
+    Generate a complete set of ExitScenarioBundles.
+
+    Parameters
+    ----------
+    seed:
+        Random seed for reproducible demo output.
+    companies:
+        Optional list of company dicts loaded externally (e.g. from
+        company_data.json via pandas in main.py).  When *None* the
+        function falls back to the hardcoded ``MOCK_COMPANIES`` list so
+        the adapter can still be imported and tested standalone.
     """
     random.seed(seed)
     base_date = date.today()
+    source = companies if companies is not None else MOCK_COMPANIES
     bundles: List[ExitScenarioBundle] = []
     try:
-        for company in MOCK_COMPANIES:
+        for company in source:
             bundle = ExitScenarioBundle(
                 company_id=company["id"],
                 company_name=company["name"],
@@ -363,7 +376,8 @@ def generate_all_scenarios(seed: int = 42) -> List[ExitScenarioBundle]:
                 continuation=build_continuation_scenario(company, base_date),
             )
             bundles.append(bundle)
-        logger.info("Generated %d scenario bundles from synthetic adapter.", len(bundles))
+        logger.info("Generated %d scenario bundles (source: %s).",
+                    len(bundles), "company_data.json" if companies is not None else "MOCK_COMPANIES")
     except Exception as exc:
         logger.error("Scenario generation failed — returning empty list. Error: %s", exc)
         raise

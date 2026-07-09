@@ -262,3 +262,91 @@ select:focus, input[type="text"]:focus {
 .sensitivity-cell:hover {
   background: rgba(56, 189, 248, 0.08);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Real Rails DNA — Glassmorphism Palette Tokens + Utility Classes
+   ═══════════════════════════════════════════════════════════════════════════
+   Two utility classes:
+     .rr-glass-panel   — heavy frosted surface (cards, sidebars, panels)
+     .rr-glass-surface — light frosted surface (inset / nested containers)
+   Optional modifier:
+     .rr-glass-hover   — interactive lift on hover and keyboard focus
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* CSS custom properties: single source of truth for every glass value */
+:root {
+  /* Semi-transparent base — Deep Navy Grey (#0B1117) at 70 % */
+  --rr-glass-bg:            rgba(11, 17, 23, 0.70);
+  /* Lighter variant for nested surfaces */
+  --rr-glass-bg-light:      rgba(11, 17, 23, 0.45);
+  /* Crisp micro-border — Electric Cyan tint at 10 % */
+  --rr-glass-border:        rgba(56, 189, 248, 0.10);
+  /* Stronger accent border for hover / focus */
+  --rr-glass-border-active: rgba(56, 189, 248, 0.28);
+  /* Panel blur sits above surface blur in the depth stack */
+  --rr-glass-blur:          16px;
+  --rr-glass-blur-sm:       8px;
+  /* Outer depth shadow + inner top-rim cyan highlight */
+  --rr-shadow-glass:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(56, 189, 248, 0.06);
+}
+
+@layer utilities {
+
+  /* ── .rr-glass-panel ─────────────────────────────────────────────────────
+   * Heavy-weight frosted surface. Use for floating cards, sidebar panels,
+   * and any top-level container above the Obsidian-Black ground (#030712).
+   * ──────────────────────────────────────────────────────────────────────*/
+  .rr-glass-panel {
+    background:              var(--rr-glass-bg);
+    -webkit-backdrop-filter: blur(var(--rr-glass-blur)) saturate(160%);
+    backdrop-filter:         blur(var(--rr-glass-blur)) saturate(160%);
+    border:                  1px solid var(--rr-glass-border);
+    border-radius:           var(--radius-xl);
+    box-shadow:              var(--rr-shadow-glass);
+    /* Inner top-rim highlight — light catching the glass edge */
+    outline:                 1px solid rgba(255, 255, 255, 0.04);
+    outline-offset:          0;
+    transition:
+      border-color 0.2s ease,
+      box-shadow   0.2s ease,
+      background   0.2s ease;
+  }
+
+  /* ── .rr-glass-surface ───────────────────────────────────────────────────
+   * Light-weight frosted surface. Use for inset areas, table headers, chip
+   * backgrounds, or containers nested inside a .rr-glass-panel.
+   * ──────────────────────────────────────────────────────────────────────*/
+  .rr-glass-surface {
+    background:              var(--rr-glass-bg-light);
+    -webkit-backdrop-filter: blur(var(--rr-glass-blur-sm)) saturate(130%);
+    backdrop-filter:         blur(var(--rr-glass-blur-sm)) saturate(130%);
+    border:                  1px solid rgba(31, 41, 55, 0.80);
+    border-radius:           var(--radius-lg);
+    box-shadow:              0 2px 12px rgba(0, 0, 0, 0.30);
+    transition:
+      border-color 0.2s ease,
+      background   0.2s ease;
+  }
+
+  /* ── .rr-glass-hover  (additive modifier) ────────────────────────────────
+   * Compose with either glass class for interactive lift on hover.
+   * Example: <div class="rr-glass-panel rr-glass-hover">
+   * ──────────────────────────────────────────────────────────────────────*/
+  .rr-glass-hover:hover {
+    border-color: var(--rr-glass-border-active);
+    background:   rgba(11, 17, 23, 0.80);
+    box-shadow:
+      var(--rr-shadow-glass),
+      0 0 24px rgba(56, 189, 248, 0.08);
+  }
+
+  /* Keyboard focus ring mirrors hover accent (accessibility). */
+  .rr-glass-hover:focus-within {
+    border-color:   var(--rr-glass-border-active);
+    outline:        2px solid rgba(56, 189, 248, 0.30);
+    outline-offset: 2px;
+  }
+
+}

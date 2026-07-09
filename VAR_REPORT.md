@@ -46,3 +46,68 @@ This audit evaluates the system's interface consistency, data storytelling effec
 ## Verification Verdict
 
 The dashboard architecture is verified as **Compliant** with all professional styling specifications. The integration of the dynamic scenario selectors handles state changes cleanly without visual blinking, screen-stretching anomalies, or grid overflow. Gate 1 evaluation is marked as a **COMPLETE PASS**.
+
+---
+
+## 4. Known Limitations & Non-Blocking Improvement Markers
+
+The items below do not affect the Gate 1 pass status. They are surfaced here for transparency and are flagged as backlog candidates for a production hardening sprint.
+
+---
+
+### IMPROVE-01 · Sensitivity Scrubber — Client-Side Recompute, Not Live Server Round-Trip
+
+| Field | Detail |
+|---|---|
+| **Severity** | Non-blocking — cosmetic / performance concern only |
+| **Status** | `IMPROVE — Backlog` |
+| **Affects** | Sensitivity Analysis slider controls (revenue multiple × discount rate scrubber) |
+
+**Observation:**  
+The variable scrubber sliders on the Sensitivity Analysis tab currently drive recomputation entirely through **client-side mathematical loop hooks** (`useMemo` / `useState` derived calculations). Each slider micro-tick recalculates the full evaluation matrix (`revenue_multiple × discount_rate → valuation_usd_m`) in-browser via JavaScript arithmetic.
+
+**What is NOT happening:**  
+No live network request is issued to the FastAPI / Pandas backend on every slider tick. The backend's `pandas.DataFrame` pipeline — which now powers the data layer via `company_data.json` — is only invoked at page-load time to populate the initial sensitivity table. Subsequent slider interactions do not re-query `/api/sensitivity/{company_id}`.
+
+**Impact:**  
+For the synthetic PoC dataset (8 companies × 20 matrix cells), client-side recompute is imperceptibly fast and functionally identical to a server round-trip. However, at production scale with live market data feeds, a debounced server-side recalculation (e.g. 300 ms trailing debounce on `PATCH /api/sensitivity/{id}`) would be required to maintain accuracy.
+
+**Recommended Remediation:**  
+Wire slider `onChange` to a debounced `fetch()` against the backend sensitivity endpoint, replacing the current inline arithmetic hook with a server-authoritative response.
+
+---
+
+### IMPROVE-02 · Cross-Platform Responsive Layout — Extreme Viewports Untested / Pending Verification
+
+| Field | Detail |
+|---|---|
+| **Severity** | Non-blocking — layout concern on non-standard viewports |
+| **Status** | `UNTESTED — Pending Verification` |
+| **Affects** | Dashboard grid, FilterBar, Sidebar, GeospatialExitMap |
+
+**Observation:**  
+Responsive layout testing was performed against the following verified breakpoints during this review cycle:
+
+| Viewport | Resolution | Result |
+|---|---|---|
+| 1080p Desktop (standard) | 1920 × 1080 | ✅ PASS |
+| 1440p Desktop (standard) | 2560 × 1440 | ✅ PASS |
+| MacBook 14" Retina | 1512 × 982 | ✅ PASS |
+| iPad Pro landscape | 1366 × 1024 | ✅ PASS |
+
+**Untested / Pending Verification:**
+
+| Viewport | Resolution | Status |
+|---|---|---|
+| Ultra-wide 21:9 | 3440 × 1440 | ⚠️ UNTESTED |
+| Ultra-wide 32:9 (super-wide) | 5120 × 1440 | ⚠️ UNTESTED |
+| Mobile portrait (primary) | 390 × 844 (iPhone 15) | ⚠️ UNTESTED |
+| Mobile landscape | 844 × 390 | ⚠️ UNTESTED |
+| Small tablet portrait | 768 × 1024 | ⚠️ UNTESTED |
+
+**Known Risk:**  
+The 70/30 layout split (`.rr-main-stage` / `.rr-sidebar`) is enforced via fixed percentage CSS columns without intermediate breakpoints for sub-768px widths. On mobile portrait, the sidebar is likely to collapse or overlap the main stage canvas. The `GeospatialExitMap` Leaflet container uses `width: 100%` and should scale cleanly, but the fixed-height property (`420px`) may produce excessive vertical space on small screens.
+
+**Recommended Remediation:**  
+Add a `@media (max-width: 768px)` breakpoint that collapses the layout to a single full-width column and converts the sidebar into a bottom drawer or tabbed panel. Conduct explicit device-lab or BrowserStack tests at 390 × 844 before production release.
+
