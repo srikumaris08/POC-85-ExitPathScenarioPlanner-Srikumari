@@ -16,22 +16,17 @@ This system serves as an **Interactive Financial Modeling Dashboard** prototype 
 * **Multi-Incident Scenario Selector:** A dropdown menu that lets you instantly swap the entire data environment between different corporate profiles and sectors (e.g., Enterprise Software vs. FinTech).
 * **Interactive Timeline Slider:** Move the scrubber to adjust dynamic adjustment variables (Revenue Multiple, Discount Rate) and watch how valuations recalculate across channels smoothly in real-time.
 * **Dynamic Content Scoreboard:** Tracks base valuations, exit dates, and stakeholder return metrics in real-time, completely synchronized with the active scenario data specs.
-* **Custom Social App Nodes:** Built on top of a 2D canvas matching specific asset class tracks (IPO, M&A, Secondary, Continuation) so you can visually isolate where transaction values distribute.
+* **Geospatial Exit Intelligence Map:** A fully responsive, interactive map canvas layer powered by `react-leaflet` and themed with a CartoDB Dark Matter skin, plotting live animated coordinate pulse markers for global exit trajectories.
 * **Top-Level KPI Analytics Grid:** High-visibility structured cards at the top of the sidebar that dynamically capture and display critical tracking metrics (Base Valuation, ARR, Rev. Multiple, and Return on Capital).
-* **Node Propagation Spread Timeline:** A high-visibility bar chart explicitly color-matched with your slate design signature (`#647d8b`). Formatted with a clean, vertical **CHANNELS** Y-axis indicator and an X-axis tracking discovery benchmarks.
-* **Ingestion Decay Half-Life Curves:** An analytical vector line graph visualizing the mathematical exponential decay trajectories calculated by the Python engine. Features explicit path mappings for Scenario A vs. Scenario B alongside an explicit vertical **VELOCITY %** Y-axis metric.
-* **Live System Terminal Ticker Log:** An anchored, screen-stabilized scrolling log monitor printing real-time structural routing modifications as timeline milestones execute.
-* **One-Click Data Export:** Instantly download the active cascade event dataset to your machine as a clean data file (`.json`).
-* **Live System Terminal Ticker:** A scrolling log monitor printing real-time alerts as events unfold, featuring high-contrast amber text for critical milestones.
-* **One-Click Data Export:** Instantly download the active cascade event dataset to your machine as a clean data file (`.json`).
+* **Live System Terminal Ticker Log:** An anchored, screen-stabilized scrolling log monitor printing real-time structural routing modifications as timeline milestones execute, featuring high-contrast amber text for critical milestones.
+* **One-Click Data Export:** Instantly download the active cascade event dataset to your machine as a clean data file format (`.json` or `.csv`).
 
 ---
-
 ## Tech Stack
 * **Frontend UI Layer:** Next.js 14+ (App Router Architecture), TypeScript, Tailwind CSS
-* **Graph Canvas Engine:** `@xyflow/react` (React Flow)
+* **Geospatial Mapping Engine:** `leaflet`, `react-leaflet`
 * **Backend API Layer:** FastAPI (Python)
-* **Data Processing Framework:** Pandas
+* **Data Processing Framework:** Pandas (`backend/company_data.json` decoupled data layer)
 
 ---
 
