@@ -38,7 +38,7 @@ Before executing any test case, verify the following environment state:
 
 | Test Case ID | Component | What the User Does | What the App Successfully Does / Handshake | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **UAT-006** | Layout Width Splits | Inspects layout dimensions on a standard 1440px wide monitor. | Main stage dashboard occupies exactly 70% width, while the sidebar maps exactly to 30% via non-wrapping flex properties. | **[x] PASS** |
+| UAT-006 | Layout Width Splits | Inspects layout dimensions on a standard 1440px wide monitor. | Main stage dashboard occupies exactly 70% width, while the sidebar maps to 30%. Extreme mobile and ultra-wide responsive aspect ratios are pending validation. | [ ] PENDING |
 | **UAT-007** | Split Divider Border | Checks the visual seam dividing the main stage from the sidebar. | Renders a precise 1px `var(--rr-border)` line without dual-border artifacts or padding alignment bleeding. | **[x] PASS** |
 | **UAT-008** | Layout Viewport Lock | Tries to scroll up or down on the parent root document level. | Root document remains locked onto a single viewport screen; `overflow: hidden` completely restrains outer jitter. | **[x] PASS** |
 | **UAT-009** | Scroll Isolation | Scrolls the mouse wheel within the internal content of the sidebar. | Enforces independent scrolling bounds inside the container elements without causing parent document layout shifting. | **[x] PASS** |
@@ -89,8 +89,8 @@ Before executing any test case, verify the following environment state:
 | Test Case ID | Component | What the User Does | What the App Successfully Does / Handshake | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **UAT-028** | Panel Activation | Clicks the "📈 Timeline & Valuation" dashboard tab. | Mounts sliders, area chart timelines, horizontal range bars, and Gantt tracking bars concurrently. | **[x] PASS** |
-| **UAT-029** | Revenue Multiple Slider | Drags Multiple slider tool thumb between 1.0× and 1.5×. | Recomputes layout ranges via `useMemo` instantly without hitting the network API or causing layout flickering. | **[x] PASS** |
-| **UAT-030** | Discount Rate Slider | Drags the Discount Rate adjustment slider past +5pp. | Updates text labels to show the current discount premium value, squeezing the spectrum bars down dynamically. | **[x] PASS** |
+| UAT-029 | Revenue Multiple Slider | Drags Multiple slider tool thumb between 1.0× and 1.5×. | Recomputes layout ranges via client-side useMemo optimization loops rather than triggering live server-side network requests to the Pandas backend on every single micro-tick. | [ ] PARTIAL |
+| UAT-030 | Discount Rate Slider | Drags the Discount Rate adjustment slider past +5pp. | Updates text labels to show current discount premium value, utilizing client-side calculation loops rather than live server-side network callbacks. | [ ] PARTIAL |
 | **UAT-031** | Slider Range Limits | Forces the Multiple slider to the furthest layout margins. | Enforces rigid parameter constraints, clamping boundaries tightly between 0.50× minimum and 1.50× maximum limits. | **[x] PASS** |
 | **UAT-032** | Discount Slider Limits | Forces the Discount Rate slider to its extreme margins. | Restrains limits between -10pp (success green) and +10pp (danger red) based on active thresholds. | **[x] PASS** |
 | **UAT-033** | Valuation Spectrum Bars | Examines horizontal ranges on the tracking spectrums. | Renders continuous bar blocks tracking Bear-to-Bull bounds alongside a distinct midpoint line tracking the Base case. | **[x] PASS** |
@@ -188,15 +188,16 @@ Before executing any test case, verify the following environment state:
 | **UAT-076** | Font Identity Execution | Loads application layout pages inside client browser engines. | Imports typography parameters cleanly from network assets, activating smooth font smoothing globally. | **[x] PASS** |
 | **UAT-077** | Custom Scrollbar Aesthetics | Drags interactive scroll indicators inside interface windows. | Displays unified 5px slim track lines matching palette tones, ignoring thick default browser tracking bars. | **[x] PASS** |
 | **UAT-078** | Palette Mapping Accuracy | Audits layout hex parameters using browser diagnostic tools. | Confirms core target matching: background selectors consistently evaluate back to explicit obsidian tones. | **[x] PASS** |
-| **UAT-079** | Chart Frame Adaptability | Alters size constraints on application browser workspace borders. | Scales chart containers fluidly within layout borders, avoiding content clipping or side-overflow. | **[x] PASS** |
+| UAT-079 | Chart Frame Adaptability | Alters size constraints on application browser workspace borders. | Scales chart containers fluidly within standard desktop bounds; extreme responsive aspect ratio edge cases are currently marked as untested. | [ ] PENDING |
 
 ---
 
 ## Final Verification Sign-Off
 
 * **Total Test Cases Executed:** 79
-* **Total Test Cases Passed:** 79
+* **Total Test Cases Passed:** 75
+* **Partial Compliance (Client-Side Loops):** 2
+* **Untested / Pending Verification (Extreme Aspect Ratios):** 2
 * **Regression Faults Detected:** 0
-* **Remaining Infrastructure Bugs:** 0
 
-> **UAT Sign-Off Summary:** All visual rendering modules, Pandas matrix filtration operations, and cross-origin fetch queries handle state changes perfectly. The system passes Gate 2 criteria and is completely stable for local prototype deployment workflows.
+> **UAT Sign-Off Summary:** All core visual rendering modules, Pandas matrix filtration operations, and cross-origin fetch queries handle standard desktop state changes cleanly. The checklist has been updated to reflect real-world testing bounds, tracking minor client-side optimization logic and pending cross-platform responsive layouts honestly.
