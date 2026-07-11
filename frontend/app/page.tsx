@@ -210,28 +210,63 @@ export default function HomePage() {
   return (
     <div
       style={{
+        width: "100vw",
+        minHeight: "100dvh",
         height: "100dvh",
+        margin: 0,
+        padding: 0,
+        maxWidth: "none",
         display: "flex",
+        flexDirection: "row",
+        background: "#030712",
         overflow: "hidden",
-        background: "var(--rr-bg)",
+        position: "fixed",
+        top: 0,
+        left: 0,
       }}
     >
-      {/* 70% Main Stage — includes FilterBar */}
-      <Dashboard
-        bundles={filteredBundles}
-        selectedId={activeBundleId}
-        onSelectId={setSelectedId}
-        sectors={sectors}
-        selectedSector={selectedSector}
-        onSectorChange={setSelectedSector}
-        selectedTimeline={selectedTimeline}
-        onTimelineChange={setSelectedTimeline}
-        selectedAssetClass={selectedAssetClass}
-        onAssetClassChange={setSelectedAssetClass}
-      />
+      {/* 70% Main Stage — strictly locked */}
+      <div
+        style={{
+          width: "70%",
+          flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          minWidth: 0,
+        }}
+      >
+        <Dashboard
+          bundles={filteredBundles}
+          selectedId={activeBundleId}
+          onSelectId={setSelectedId}
+          selectedTimeline={selectedTimeline}
+          selectedAssetClass={selectedAssetClass}
+        />
+      </div>
 
-      {/* 30% Intelligence Sidebar — KPIs, Why This Matters, Who Controls, Download */}
-      <Sidebar bundle={activeBundle} />
+      {/* 30% Intelligence Sidebar — strictly locked */}
+      <div
+        style={{
+          width: "30%",
+          flexShrink: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          minWidth: 0,
+        }}
+      >
+        <Sidebar
+          bundle={activeBundle}
+          sectors={sectors}
+          selectedSector={selectedSector}
+          onSectorChange={setSelectedSector}
+          selectedTimeline={selectedTimeline}
+          onTimelineChange={setSelectedTimeline}
+          selectedAssetClass={selectedAssetClass}
+          onAssetClassChange={setSelectedAssetClass}
+        />
+      </div>
     </div>
   );
 }

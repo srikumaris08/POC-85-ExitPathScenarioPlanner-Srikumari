@@ -26,10 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} h-full w-full antialiased`} style={{ margin: 0, padding: 0 }}>
       <body
-        className="h-full overflow-hidden"
-        style={{ backgroundColor: "var(--rr-bg)", color: "var(--rr-text)" }}
+        className="h-full w-full m-0 p-0 overflow-hidden"
+        style={{ backgroundColor: "var(--rr-bg)", color: "var(--rr-text)", maxWidth: "none" }}
       >
         {children}
       </body>

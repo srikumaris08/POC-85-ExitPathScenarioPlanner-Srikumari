@@ -9,6 +9,8 @@ Endpoints:
   GET  /api/scenarios/{id}       → Single company bundle
   GET  /api/scenarios/{id}/{type}→ Specific exit type for a company
   GET  /api/sectors              → Available sectors list
+  GET  /api/companies            → Raw company profiles from company_data.json
+  GET  /api/map-pins             → Geospatial map pins (lat, lng, exit type) from company_data.json
   GET  /api/download-sample      → Download JSON or CSV sample data
   GET  /api/sensitivity/{id}     → Sensitivity table for a company
   GET  /api/waterfall/{id}       → Liquidation waterfall for a company
@@ -294,6 +296,71 @@ def get_companies(
         "count": len(records),
         "source_file": _DATA_FILE.name,
         "companies": records,
+    }
+
+
+@app.get(
+    "/api/map-pins",
+    tags=["Meta"],
+    summary="Geospatial map pins loaded from company_data.json (lat, lng, exit type, financials)",
+)
+def get_map_pins(
+    sector: Optional[str] = Query(None, description="Filter by sector name"),
+) -> Dict[str, Any]:
+    """
+    Return a lightweight list of map pin objects derived from the company
+    DataFrame.  Each pin carries the coordinates, sector, stage, and primary
+    exit type stored in company_data.json — no hard-coding in the frontend.
+    The frontend GeospatialExitMap component fetches this endpoint inside a
+    useEffect() hook and binds the result directly to component state.
+    """
+    df = _get_company_df()
+    if sector:
+        df = df[df["sector"].str.lower() == sector.lower()]
+
+    # Only emit companies that have coordinate data embedded in the JSON.
+    required_cols = {"id", "name", "sector", "stage", "lat", "lng",
+                     "primary_exit_type", "arr", "raised"}
+    missing = required_cols - set(df.columns)
+    if missing:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"company_data.json is missing required map-pin columns: {missing}. "
+                "Ensure lat, lng, city, and primary_exit_type are present for every company."
+            ),
+        )
+
+    # Build valuation (base-case) from the scenario cache so the popups show
+    # consistent numbers to the rest of the dashboard.
+    scenario_map: Dict[str, float] = {}
+    for bundle in _get_scenarios():
+        if bundle.ipo:
+            scenario_map[bundle.company_id] = bundle.ipo.valuation.base_case_usd_m
+
+    pins = []
+    for _, row in df.iterrows():
+        cid = str(row["id"])
+        city_val = str(row["city"]) if "city" in df.columns else ""
+        pins.append({
+            "id":             cid,
+            "name":           str(row["name"]),
+            "sector":         str(row["sector"]),
+            "stage":          str(row["stage"]),
+            "city":           city_val,
+            "lat":            float(row["lat"]),
+            "lng":            float(row["lng"]),
+            "exitType":       str(row["primary_exit_type"]),
+            "arrUsdM":        float(row["arr"]),
+            "raisedUsdM":     float(row["raised"]),
+            "valuationUsdM":  scenario_map.get(cid, 0.0),
+        })
+
+
+    return {
+        "count":       len(pins),
+        "source_file": _DATA_FILE.name,
+        "pins":        pins,
     }
 
 

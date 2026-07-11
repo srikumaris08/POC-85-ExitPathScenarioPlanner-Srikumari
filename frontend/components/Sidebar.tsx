@@ -4,14 +4,13 @@
  * Sidebar.tsx — 30% Intelligence Sidebar
  * Real Rails Intelligence Library · Exit Path Scenario Planner
  *
- * Section A: Title & core liquidity KPI cards
- * Section B: "Why This Matters"
- * Section C: "Who Controls the Rail"
- * Section D: Download Sample Data
- * Section E: Footer branding
+ * Section A: Title & High-level Metric (Core KPI telemetry grids)
+ * Section B: "Why This Matters" (Infrastructure context)
+ * Section C: "Who Controls the Rail" (Governance/Institutional context)
+ * Section D: Functional Filters & Tooltips (interactive dropdowns + timeline filter)
+ * Section E: "Download Sample Data" button at the bottom
  *
- * NOTE: Intelligence Filters have been moved to FilterBar.tsx (horizontal
- * bar above the main stage). This sidebar has no internal scroll.
+ * NOTE: Width is controlled by the parent w-[30%] wrapper in page.tsx.
  */
 
 import React, { useState } from "react";
@@ -20,6 +19,14 @@ import { downloadSampleData } from "@/lib/api";
 
 interface Props {
   bundle: ExitScenarioBundle | null;
+  // Section D filter props — wired to global state in page.tsx
+  sectors: string[];
+  selectedSector: string;
+  onSectorChange: (s: string) => void;
+  selectedTimeline: string;
+  onTimelineChange: (t: string) => void;
+  selectedAssetClass: string;
+  onAssetClassChange: (a: string) => void;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -117,9 +124,43 @@ function InfoBlock({ icon, title, children, accentColor = "var(--rr-primary)" }:
   );
 }
 
+// ── Filter constants ──────────────────────────────────────────────────────────
+const TIMELINES = ["All", "< 12 months", "12–24 months", "24–36 months", "> 36 months"];
+const ASSET_CLASSES = ["All", "IPO", "M&A", "Secondary", "Continuation Vehicle"];
+
+const SELECT_STYLE: React.CSSProperties = {
+  fontSize: "0.72rem",
+  padding: "5px 8px",
+  width: "100%",
+  borderRadius: 6,
+  background: "var(--rr-bg)",
+  border: "1px solid var(--rr-border)",
+  color: "var(--rr-text)",
+  cursor: "pointer",
+};
+
+const FILTER_LABEL_STYLE: React.CSSProperties = {
+  fontSize: "0.58rem",
+  fontWeight: 700,
+  color: "var(--rr-text-dim)",
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  marginBottom: 3,
+  display: "block",
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function Sidebar({ bundle }: Props) {
+export default function Sidebar({
+  bundle,
+  sectors,
+  selectedSector,
+  onSectorChange,
+  selectedTimeline,
+  onTimelineChange,
+  selectedAssetClass,
+  onAssetClassChange,
+}: Props) {
   const [downloadFmt, setDownloadFmt] = useState<"json" | "csv">("json");
   const [downloading, setDownloading] = useState(false);
   const [dlSuccess, setDlSuccess] = useState(false);
@@ -159,17 +200,22 @@ export default function Sidebar({ bundle }: Props) {
   const returnMultiple = totalRaised > 0 ? (baseValuation / totalRaised).toFixed(2) : "—";
   const exitCount = [bundle?.ipo, bundle?.ma, bundle?.secondary, bundle?.continuation].filter(Boolean).length;
 
+  const hasActiveFilters =
+    selectedSector !== "" ||
+    selectedTimeline !== "All" ||
+    selectedAssetClass !== "All";
+
   return (
     <aside
       style={{
-        flex: "0 0 30%",
+        flex: 1,
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",      /* no scroll anywhere in sidebar */
+        overflow: "hidden",
         background: "var(--rr-surface)",
       }}
     >
-      {/* ── SECTION A: Title & Core Liquidity KPI Cards ─────────── */}
+      {/* ── SECTION A: Title & High-level Metric (KPI telemetry grids) ── */}
       <div
         style={{
           flexShrink: 0,
@@ -264,7 +310,7 @@ export default function Sidebar({ bundle }: Props) {
         </div>
       </div>
 
-      {/* ── Sections B / C / D — flat column, hidden-scrollbar overflow ─ */}
+      {/* ── Sections B / C / D / E — flat column, hidden-scrollbar overflow ── */}
       <div
         className="rr-sidebar-scroll"
         style={{
@@ -274,10 +320,10 @@ export default function Sidebar({ bundle }: Props) {
           display: "flex",
           flexDirection: "column",
           gap: 10,
-          overflowY: "auto",   /* allows expanded sections; scrollbar hidden via CSS */
+          overflowY: "auto",
         }}
       >
-        {/* SECTION B: Why This Matters */}
+        {/* ── SECTION B: Why This Matters (Infrastructure context) ── */}
         <InfoBlock icon="💡" title="Why This Matters" accentColor="var(--rr-primary)">
           <ul style={{ margin: 0, paddingLeft: 14, display: "flex", flexDirection: "column", gap: 3 }}>
             <li>Exit is a <strong style={{ color: "var(--rr-text)" }}>spectrum</strong> — IPO, M&A, Secondary, Continuation each carry distinct payoffs.</li>
@@ -287,7 +333,7 @@ export default function Sidebar({ bundle }: Props) {
           </ul>
         </InfoBlock>
 
-        {/* SECTION C: Who Controls the Rail */}
+        {/* ── SECTION C: Who Controls the Rail (Governance/Institutional context) ── */}
         <InfoBlock icon="🏛️" title="Who Controls the Rail" accentColor="var(--rr-secondary)">
           <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
             {[
@@ -312,7 +358,138 @@ export default function Sidebar({ bundle }: Props) {
           </div>
         </InfoBlock>
 
-        {/* SECTION D: Download Sample Data */}
+        {/* ── SECTION D: Functional Filters & Tooltips ── */}
+        <div className="rr-card" style={{ padding: "10px 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            <span style={{ fontSize: "0.85rem" }}>🎛️</span>
+            <span
+              style={{
+                fontSize: "0.74rem",
+                fontWeight: 700,
+                color: "var(--rr-primary)",
+                letterSpacing: "0.02em",
+              }}
+            >
+              Intelligence Filters
+            </span>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {/* Sector filter */}
+            <div>
+              <label htmlFor="sidebar-filter-sector" style={FILTER_LABEL_STYLE}>
+                Sector
+              </label>
+              <select
+                id="sidebar-filter-sector"
+                value={selectedSector}
+                onChange={(e) => onSectorChange(e.target.value)}
+                style={SELECT_STYLE}
+              >
+                <option value="">All Sectors</option>
+                {(sectors ?? []).map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Exit Timeline filter */}
+            <div>
+              <label htmlFor="sidebar-filter-timeline" style={FILTER_LABEL_STYLE}>
+                Exit Timeline
+              </label>
+              <select
+                id="sidebar-filter-timeline"
+                value={selectedTimeline}
+                onChange={(e) => onTimelineChange(e.target.value)}
+                style={SELECT_STYLE}
+              >
+                {TIMELINES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Asset Class / Exit Path filter */}
+            <div>
+              <label htmlFor="sidebar-filter-asset-class" style={FILTER_LABEL_STYLE}>
+                Exit Path / Asset Class
+              </label>
+              <select
+                id="sidebar-filter-asset-class"
+                value={selectedAssetClass}
+                onChange={(e) => onAssetClassChange(e.target.value)}
+                style={SELECT_STYLE}
+              >
+                {ASSET_CLASSES.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Active filter pills + clear */}
+            {hasActiveFilters && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5, alignItems: "center", marginTop: 2 }}>
+                {selectedSector && (
+                  <span className="rr-badge rr-badge-cyan">
+                    {selectedSector}{" "}
+                    <span
+                      style={{ cursor: "pointer", marginLeft: 3, opacity: 0.8 }}
+                      onClick={() => onSectorChange("")}
+                    >
+                      ✕
+                    </span>
+                  </span>
+                )}
+                {selectedTimeline !== "All" && (
+                  <span className="rr-badge rr-badge-indigo">
+                    {selectedTimeline}{" "}
+                    <span
+                      style={{ cursor: "pointer", marginLeft: 3, opacity: 0.8 }}
+                      onClick={() => onTimelineChange("All")}
+                    >
+                      ✕
+                    </span>
+                  </span>
+                )}
+                {selectedAssetClass !== "All" && (
+                  <span className="rr-badge rr-badge-green">
+                    {selectedAssetClass}{" "}
+                    <span
+                      style={{ cursor: "pointer", marginLeft: 3, opacity: 0.8 }}
+                      onClick={() => onAssetClassChange("All")}
+                    >
+                      ✕
+                    </span>
+                  </span>
+                )}
+                <button
+                  onClick={() => {
+                    onSectorChange("");
+                    onTimelineChange("All");
+                    onAssetClassChange("All");
+                  }}
+                  style={{
+                    fontSize: "0.6rem",
+                    fontWeight: 700,
+                    color: "var(--rr-text-dim)",
+                    background: "transparent",
+                    border: "1px solid var(--rr-border)",
+                    borderRadius: 4,
+                    padding: "2px 6px",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── SECTION E: Download Sample Data ── */}
         <div className="rr-card" style={{ padding: "10px 12px" }}>
           <p
             style={{
@@ -446,7 +623,7 @@ export default function Sidebar({ bundle }: Props) {
           </div>
         </div>
 
-        {/* SECTION E: Footer branding */}
+        {/* Footer branding */}
         <div
           style={{
             padding: "10px 0",

@@ -54,7 +54,12 @@
 
 html, body {
   height: 100%;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 body {
@@ -63,6 +68,30 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Nuclear override: strip ALL Tailwind v4 / shadcn container   */
+/* constraints that would center or max-width our full-bleed layout */
+#__next,
+#__next > div,
+body > div,
+body > main,
+main {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Tailwind v4 injects a .container class with breakpoint max-widths */
+/* and mx-auto. Override it completely for our layout. */
+.container {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
 }
 
 /* ── Scrollbar Styling ───────────────────────────────────────── */

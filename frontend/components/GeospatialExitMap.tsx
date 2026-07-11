@@ -8,6 +8,12 @@
  * CartoDB Dark Matter tile layer so it blends seamlessly into
  * the Obsidian-Black (#030712) visual DNA.
  *
+ * Data Flow (live API — no hardcoded arrays)
+ * ───────────────────────────────────────────
+ * On mount, a useEffect() calls GET /api/map-pins on the FastAPI backend.
+ * The response is bound directly to component state so every map marker,
+ * tooltip, and popup reflects the records in company_data.json in real time.
+ *
  * Features
  * ──────────
  * • Dark-Matter base tiles (open-source, no API key required)
@@ -31,7 +37,7 @@
  * <GeospatialExitMap height="420px" />
  */
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -55,82 +61,27 @@ L.Icon.Default.mergeOptions({
 });
 
 // ── Exit-type colour map (matches globals.css DNA tokens) ────────────────────
-const EXIT_COLORS: Record<ExitType, string> = {
-  IPO:                   "#38BDF8", // Electric Cyan  — --chart-ipo
-  "M&A":                 "#818CF8", // Indigo         — --chart-ma
-  Secondary:             "#10B981", // Emerald        — --chart-secondary
-  "Continuation Vehicle":"#F59E0B", // Amber          — --chart-continuation
+const EXIT_COLORS: Record<string, string> = {
+  "IPO":                    "#38BDF8", // Electric Cyan  — --chart-ipo
+  "M&A":                    "#818CF8", // Indigo         — --chart-ma
+  "Secondary":              "#10B981", // Emerald        — --chart-secondary
+  "Continuation Vehicle":   "#F59E0B", // Amber          — --chart-continuation
 };
 
-type ExitType = "IPO" | "M&A" | "Secondary" | "Continuation Vehicle";
-
-// ── Company pin data ─────────────────────────────────────────────────────────
-// Geographic coordinates are real HQ cities for the archetypal sector.
-// Financial figures mirror company_data.json exactly (C001–C008).
+// ── Map pin type — mirrors the /api/map-pins response shape ─────────────────
 export interface CompanyPin {
-  id:         string;
-  name:       string;
-  sector:     string;
-  stage:      string;
-  lat:        number;
-  lng:        number;
-  exitType:   ExitType;
-  arrUsdM:    number;
-  raisedUsdM: number;
-  /** Base-case valuation (arr × sector_multiple.mid) */
+  id:            string;
+  name:          string;
+  sector:        string;
+  stage:         string;
+  city:          string;
+  lat:           number;
+  lng:           number;
+  exitType:      string;
+  arrUsdM:       number;
+  raisedUsdM:    number;
   valuationUsdM: number;
 }
-
-const DEFAULT_PINS: CompanyPin[] = [
-  // C001 NovaSpark AI — Enterprise Software — San Francisco
-  {
-    id: "C001", name: "NovaSpark AI", sector: "Enterprise Software",
-    stage: "Pre-IPO", lat: 37.7749, lng: -122.4194,
-    exitType: "IPO", arrUsdM: 85, raisedUsdM: 220, valuationUsdM: 850,
-  },
-  // C002 PulseFinance — FinTech — New York
-  {
-    id: "C002", name: "PulseFinance", sector: "FinTech",
-    stage: "Series C", lat: 40.7128, lng: -74.006,
-    exitType: "M&A", arrUsdM: 52, raisedUsdM: 135, valuationUsdM: 468,
-  },
-  // C003 MedRoute Health — Healthcare IT — Boston
-  {
-    id: "C003", name: "MedRoute Health", sector: "Healthcare IT",
-    stage: "Series B", lat: 42.3601, lng: -71.0589,
-    exitType: "Secondary", arrUsdM: 28, raisedUsdM: 78, valuationUsdM: 210,
-  },
-  // C004 QuantumLeap Labs — Deep Tech — Austin
-  {
-    id: "C004", name: "QuantumLeap Labs", sector: "Deep Tech",
-    stage: "Series C", lat: 30.2672, lng: -97.7431,
-    exitType: "Continuation Vehicle", arrUsdM: 40, raisedUsdM: 310, valuationUsdM: 560,
-  },
-  // C005 GreenVolt Energy — Climate Tech — Denver
-  {
-    id: "C005", name: "GreenVolt Energy", sector: "Climate Tech",
-    stage: "Growth", lat: 39.7392, lng: -104.9903,
-    exitType: "IPO", arrUsdM: 61, raisedUsdM: 180, valuationUsdM: 549,
-  },
-  // C006 ShieldNet Security — Cybersecurity — Washington DC
-  {
-    id: "C006", name: "ShieldNet Security", sector: "Cybersecurity",
-    stage: "Pre-IPO", lat: 38.9072, lng: -77.0369,
-    exitType: "IPO", arrUsdM: 110, raisedUsdM: 290, valuationUsdM: 1320,
-  },
-  // C007 LearnBridge EdTech — EdTech — Chicago
-  {
-    id: "C007", name: "LearnBridge EdTech", sector: "EdTech",
-    stage: "Series B", lat: 41.8781, lng: -87.6298,
-    exitType: "M&A", arrUsdM: 18, raisedUsdM: 55, valuationUsdM: 99,
-  },
-  // C008 Streamline Consumer — Consumer Tech — Los Angeles
-  {
-    id: "C008", name: "Streamline Consumer", sector: "Consumer Tech",
-    stage: "Series C", lat: 34.0522, lng: -118.2437,
-    exitType: "Secondary", arrUsdM: 34, raisedUsdM: 95, valuationUsdM: 204,
-  },
-];
 
 // ── Custom pulsing SVG div-icon factory ─────────────────────────────────────
 function makePulseIcon(color: string): L.DivIcon {
@@ -188,7 +139,7 @@ function BoundsFitter({ pins }: { pins: CompanyPin[] }) {
 
 // ── Legend component ─────────────────────────────────────────────────────────
 function MapLegend() {
-  const entries = Object.entries(EXIT_COLORS) as [ExitType, string][];
+  const entries = Object.entries(EXIT_COLORS);
   return (
     <div
       style={{
@@ -231,8 +182,6 @@ function MapLegend() {
 export interface GeospatialExitMapProps {
   /** CSS height of the map container. Default "420px". */
   height?: string;
-  /** Override the default pin dataset. */
-  pins?: CompanyPin[];
   /** Tile layer URL. Defaults to CartoDB Dark Matter (no API key). */
   tileUrl?: string;
   /** Attribution string for the tile provider. */
@@ -246,14 +195,50 @@ const CARTO_DARK_URL =
 const CARTO_DARK_ATTR =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
+// ── Backend base URL (mirrors the env var used in api.ts) ────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
 // ── Main component ───────────────────────────────────────────────────────────
 export default function GeospatialExitMap({
-  height            = "420px",
-  pins              = DEFAULT_PINS,
-  tileUrl           = CARTO_DARK_URL,
-  tileAttribution   = CARTO_DARK_ATTR,
-  className         = "",
+  height          = "420px",
+  tileUrl         = CARTO_DARK_URL,
+  tileAttribution = CARTO_DARK_ATTR,
+  className       = "",
 }: GeospatialExitMapProps) {
+  // ── Live API state — no hardcoded DEFAULT_PINS ────────────────────────────
+  const [pins,    setPins]    = useState<CompanyPin[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    fetch(`${API_BASE}/api/map-pins`, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`/api/map-pins returned ${res.status} ${res.statusText}`);
+        return res.json() as Promise<{ pins: CompanyPin[]; count: number; source_file: string }>;
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setPins(data.pins ?? []);
+          setLoading(false);
+        }
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setError(err.message);
+          setLoading(false);
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, []);  // runs once on mount — fetches live from company_data.json via backend
+
   // Inject the CSS keyframe for the pulse animation once into the document.
   const styleInjected = useRef(false);
   useEffect(() => {
@@ -322,6 +307,47 @@ export default function GeospatialExitMap({
     document.head.appendChild(style);
   }, []);
 
+  // ── Overlay states ────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div style={{
+        height, display: "flex", alignItems: "center", justifyContent: "center",
+        background: "#030712", borderRadius: 10, border: "1px solid rgba(56,189,248,0.12)",
+        flexDirection: "column", gap: 12,
+      }}>
+        <span style={{ animation: "pulseGlow 1.5s ease-in-out infinite", fontSize: "1.4rem" }}>🗺️</span>
+        <p style={{ fontSize: "0.8rem", color: "#94A3B8", margin: 0 }}>
+          Loading Exit Intelligence Map…
+        </p>
+        <p style={{ fontSize: "0.68rem", color: "#475569", margin: 0 }}>
+          Fetching pins from <code style={{ color: "#38BDF8" }}>/api/map-pins</code>
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{
+        height, display: "flex", alignItems: "center", justifyContent: "center",
+        background: "#030712", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)",
+        flexDirection: "column", gap: 10, padding: 20,
+      }}>
+        <span style={{ fontSize: "1.4rem" }}>⚠️</span>
+        <p style={{ fontSize: "0.8rem", color: "#F87171", margin: 0, fontWeight: 600 }}>
+          Map data unavailable
+        </p>
+        <p style={{ fontSize: "0.7rem", color: "#94A3B8", margin: 0, textAlign: "center" }}>
+          {error}
+        </p>
+        <p style={{ fontSize: "0.65rem", color: "#475569", margin: 0 }}>
+          Ensure the backend is running on{" "}
+          <code style={{ color: "#38BDF8" }}>{API_BASE}</code>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`rr-map-container ${className}`}
@@ -362,6 +388,14 @@ export default function GeospatialExitMap({
         }}>
           Exit Path Intelligence Map
         </span>
+        {/* Live data badge */}
+        <span style={{
+          fontSize:"0.58rem", fontWeight:600, letterSpacing:"0.05em",
+          background:"rgba(56,189,248,0.12)", border:"1px solid rgba(56,189,248,0.3)",
+          borderRadius:"4px", padding:"1px 5px", color:"#38BDF8",
+        }}>
+          LIVE · {pins.length} companies
+        </span>
       </div>
 
       <MapContainer
@@ -385,7 +419,7 @@ export default function GeospatialExitMap({
         {/* ── Auto-fit bounds ── */}
         <BoundsFitter pins={pins} />
 
-        {/* ── Company markers ── */}
+        {/* ── Company markers — driven from /api/map-pins (company_data.json) ── */}
         {pins.map((pin) => {
           const color = EXIT_COLORS[pin.exitType] ?? "#38BDF8";
           const icon  = makePulseIcon(color);
@@ -404,6 +438,12 @@ export default function GeospatialExitMap({
                   <span style={{ color:"#94A3B8", fontSize:"0.7rem" }}>
                     {pin.sector} · {pin.stage}
                   </span>
+                  {pin.city && (
+                    <>
+                      <br />
+                      <span style={{ color:"#64748B", fontSize:"0.68rem" }}>📍 {pin.city}</span>
+                    </>
+                  )}
                   <br />
                   <span style={{
                     display:"inline-block", marginTop:"2px",
@@ -430,6 +470,11 @@ export default function GeospatialExitMap({
                     <p style={{ fontSize:"0.72rem", color:"#94A3B8", margin:0 }}>
                       {pin.sector} · {pin.stage}
                     </p>
+                    {pin.city && (
+                      <p style={{ fontSize:"0.68rem", color:"#64748B", margin:0 }}>
+                        📍 {pin.city}
+                      </p>
+                    )}
                   </div>
 
                   {/* Exit path badge */}
@@ -446,9 +491,9 @@ export default function GeospatialExitMap({
 
                   {/* Financial metrics grid */}
                   {[
-                    ["ARR",       `$${pin.arrUsdM}M`],
-                    ["Raised",    `$${pin.raisedUsdM}M`],
-                    ["Val. (Base)",`$${pin.valuationUsdM}M`],
+                    ["ARR",        `$${pin.arrUsdM}M`],
+                    ["Raised",     `$${pin.raisedUsdM}M`],
+                    ["Val. (Base)", pin.valuationUsdM > 0 ? `$${pin.valuationUsdM.toFixed(0)}M` : "—"],
                   ].map(([label, value]) => (
                     <div key={label} style={{
                       display:"flex", justifyContent:"space-between",
@@ -462,10 +507,10 @@ export default function GeospatialExitMap({
                     </div>
                   ))}
 
-                  {/* Company ID */}
+                  {/* Company ID + data source */}
                   <p style={{ fontSize:"0.62rem", color:"#475569", marginTop:"8px",
                               borderTop:"1px solid rgba(31,41,55,0.8)", paddingTop:"6px" }}>
-                    ID: {pin.id} · synthetic-mock data
+                    ID: {pin.id} · source: company_data.json
                   </p>
                 </div>
               </Popup>

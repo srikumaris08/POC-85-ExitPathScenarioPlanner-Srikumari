@@ -14,7 +14,7 @@ import ExitCompareModule       from "./ExitCompareModule";
 import TimelineValuationModule from "./TimelineValuationModule";
 import StakeholderOutcomesView from "./StakeholderOutcomesView";
 import SensitivityTable        from "./SensitivityTable";
-import FilterBar               from "./FilterBar";
+// FilterBar removed — filters live exclusively in the 30% Intelligence Sidebar (Section D)
 
 // Leaflet requires a real DOM — never run on the server.
 const GeospatialExitMap = dynamic(
@@ -38,14 +38,8 @@ interface Props {
   bundles: ExitScenarioBundle[];
   selectedId: string;
   onSelectId: (id: string) => void;
-  // Filter state — lifted from page.tsx
-  sectors: string[];
-  selectedSector: string;
-  onSectorChange: (s: string) => void;
   selectedTimeline: string;
-  onTimelineChange: (t: string) => void;
   selectedAssetClass: string;
-  onAssetClassChange: (a: string) => void;
 }
 
 type ActivePanel = "compare" | "timeline" | "stakeholders" | "sensitivity" | "map";
@@ -62,13 +56,8 @@ export default function Dashboard({
   bundles,
   selectedId,
   onSelectId,
-  sectors,
-  selectedSector,
-  onSectorChange,
   selectedTimeline,
-  onTimelineChange,
   selectedAssetClass,
-  onAssetClassChange,
 }: Props) {
   const [activePanel, setActivePanel] = useState<ActivePanel>("compare");
 
@@ -78,7 +67,7 @@ export default function Dashboard({
     return (
       <div
         style={{
-          flex: "0 0 70%",
+          flex: 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -95,7 +84,9 @@ export default function Dashboard({
   return (
     <main
       style={{
-        flex: "0 0 70%",
+        flex: 1,
+        width: "100%",
+        maxWidth: "none",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -193,16 +184,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* ── Intelligence Filter Bar ──────────────────────────────── */}
-      <FilterBar
-        sectors={sectors}
-        selectedSector={selectedSector}
-        onSectorChange={onSectorChange}
-        selectedTimeline={selectedTimeline}
-        onTimelineChange={onTimelineChange}
-        selectedAssetClass={selectedAssetClass}
-        onAssetClassChange={onAssetClassChange}
-      />
+      {/* Filters removed from Main Stage — exclusively in the 30% Intelligence Sidebar (Section D) */}
 
       {/* ── Module Navigation Tabs ──────────────────────────────── */}
       <div

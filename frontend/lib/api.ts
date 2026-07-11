@@ -4,6 +4,7 @@
  */
 
 import type { ScenariosResponse, ExitScenarioBundle } from "./types";
+import type { CompanyPin } from "@/components/GeospatialExitMap";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -40,6 +41,22 @@ export async function fetchBundleById(companyId: string): Promise<ExitScenarioBu
 /** Fetch available sectors list */
 export async function fetchSectors(): Promise<{ sectors: string[] }> {
   return get<{ sectors: string[] }>("/api/sectors");
+}
+
+/**
+ * Fetch geospatial map pins from company_data.json (via the backend).
+ * The GeospatialExitMap component calls this endpoint directly inside its
+ * own useEffect() hook — this export is provided for external consumers or tests.
+ */
+export async function fetchMapPins(sector?: string): Promise<{
+  count: number;
+  source_file: string;
+  pins: CompanyPin[];
+}> {
+  const query = new URLSearchParams();
+  if (sector) query.set("sector", sector);
+  const qs = query.toString() ? `?${query.toString()}` : "";
+  return get(`/api/map-pins${qs}`);
 }
 
 /** Download sample data — triggers browser download */
