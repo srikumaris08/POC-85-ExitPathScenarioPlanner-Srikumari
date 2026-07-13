@@ -15,11 +15,22 @@ from __future__ import annotations
 import io
 import csv
 import json
+import os
 import random
 import logging
 import calendar
 from datetime import date, timedelta
 from typing import Any, Dict, List, Optional
+
+# ── External API base URLs (decoupled via environment variables) ──────────────
+SEC_EDGAR_API_URL: str = os.getenv("SEC_EDGAR_API_URL", "https://data.sec.gov/submissions/")
+CRUNCHBASE_API_URL: str = os.getenv("CRUNCHBASE_API_URL", "https://api.crunchbase.com/v4/data/")
+
+# Derive host-level origins for building browser-facing profile/search links.
+# e.g. "https://data.sec.gov/submissions/" → "https://data.sec.gov"
+import urllib.parse as _urlparse
+_SEC_ORIGIN: str = _urlparse.urlunparse(_urlparse.urlparse(SEC_EDGAR_API_URL)._replace(path="", params="", query="", fragment=""))
+_CB_ORIGIN: str  = _urlparse.urlunparse(_urlparse.urlparse(CRUNCHBASE_API_URL)._replace(path="", params="", query="", fragment=""))
 
 from schemas import (
     ContinuationVehicleScenario,
@@ -212,7 +223,7 @@ def build_ipo_scenario(company: Dict[str, Any], base_date: date) -> IPOScenario:
         liquidation_waterfall=_waterfall(company["raised"], val),
         timeline=timeline,
         sensitivity_table=_sensitivity(company["arr"], company["sector"]),
-        sec_filing_url=f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company={company['name'].replace(' ', '+')}&type=S-1",
+        sec_filing_url=f"{_SEC_ORIGIN}/cgi-bin/browse-edgar?action=getcompany&company={company['name'].replace(' ', '+')}&type=S-1",
         data_source="synthetic-mock | SEC EDGAR (simulated)",
         market_condition_assumption=MarketCondition.NEUTRAL,
     )
@@ -254,7 +265,7 @@ def build_ma_scenario(company: Dict[str, Any], base_date: date) -> MAScenario:
         liquidation_waterfall=_waterfall(company["raised"], val),
         timeline=timeline,
         sensitivity_table=_sensitivity(company["arr"], company["sector"]),
-        crunchbase_profile_url=f"https://www.crunchbase.com/organization/{acquirer.lower().replace(' ', '-')}",
+        crunchbase_profile_url=f"{_CB_ORIGIN}/organization/{acquirer.lower().replace(' ', '-')}",
         data_source="synthetic-mock | Crunchbase (simulated)",
         market_condition_assumption=MarketCondition.NEUTRAL,
         regulatory_risk=random.choice(["Low", "Medium", "High"]),
